@@ -1,4 +1,4 @@
-from input_utils import read_members
+from src.input_utils import read_members
 
 members = read_members('data/members.txt')
 
@@ -15,7 +15,7 @@ def get_members_count():
 
 # Greet someone by their name
 def greet(name):
-	print(f"Hello, {name}!")
+	return f"Hello, {name}!"
 
 def display_as_json(data):
 	import json
