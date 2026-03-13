@@ -68,3 +68,25 @@ python src/main.py
 ```
 
 ---
+
+##  📝 Project Summary
+# 🛠️ Who Did What
+* Jakub Kuflik: Developed the main Python program and implemented the 3 custom functions.
+
+* German Moll: Prepared and formatted the README documentation, with assistance from Piotr Rak.
+
+* Piotr Rak: Acted as Team Leader, handled task distribution, helped whoever needed help and conducted code reviews.
+
+* Emre Özbayrak: Wrote the test cases in the tests/ directory to verify the behavior of the custom functions.
+
+## ⚠️ Problems Encountered
+
+* Environment Setup: Making sure everyone was working within the same virtual environment and had the correct Python paths configured took some            troubleshooting.
+
+##  🧠 What We Learned
+
+* GitHub Workflow: We learned the practical importance of using separate branches for features and tests, rather than committing directly to the main branch.
+
+* Code Reviews: Utilizing Pull Requests allowed us to review each other's code and catch bugs before merging.
+
+* Python Testing: We gained hands-on experience structuring a Python project with a dedicated src/ directory for code and a tests/ directory for test cases.

@@ -15,7 +15,7 @@ def get_members_count():
 
 # Greet someone by their name
 def greet(name):
-	print(f"Hello, {name}!")
+    print(f"Hello, {name}!")
 
 def display_as_json(data):
 	import json
