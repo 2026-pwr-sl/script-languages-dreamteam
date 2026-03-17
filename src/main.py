@@ -1,22 +1,29 @@
-from input_utils import read_members
-
-members = read_members('data/members.txt')
-
-print("=== DREAM TEAM ===")
-
-print("Members:")
-for member in members:
-	print("- " + member)
+from team import get_members_count, load_team_members, print_team_members
+from utils import greet, print_json
 
 
-# Return the number of members in the team
-def get_members_count():
-	return len(read_members('data/members.txt'))
+MEMBERS_FILE = "data/members.txt"
 
-# Greet someone by their name
-def greet(name):
-    print(f"Hello, {name}!")
 
-def display_as_json(data):
-	import json
-	print(json.dumps(data, indent=4))
+def main() -> None:
+    """Run the application."""
+    team_members = load_team_members(MEMBERS_FILE)
+
+    print("=== DREAM TEAM ===")
+    print_team_members(team_members)
+
+    members_count = get_members_count(team_members)
+    print(f"\nTotal members: {members_count}")
+
+    greet("Team")
+
+    team_data = {
+        "team_name": "Dream Team",
+        "members": team_members,
+        "count": members_count,
+    }
+    print_json(team_data)
+
+
+if __name__ == "__main__":
+    main()
