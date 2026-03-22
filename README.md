@@ -70,7 +70,7 @@ python src/main.py
 ### 4️⃣ Run Tests
 
 ```bash
-$env:PYTHONPATH = "src"; python tests/test_main.py
+python -m pytest tests/        
 ```
 
 ---
