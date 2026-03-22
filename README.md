@@ -67,6 +67,12 @@ source venv/bin/activate
 python src/main.py
 ```
 
+### 4️⃣ Run Tests
+
+```bash
+$env:PYTHONPATH = "src"; python tests/test_main.py
+```
+
 ---
 
 ##  📝 Project Summary
