@@ -8,6 +8,7 @@ actions based on the provided options.
 import argparse
 
 from team import (
+    TeamDataError,
     add_team_member,
     get_team_members_list,
     get_members_count,
@@ -71,7 +72,14 @@ def main() -> None:
     args = parse_arguments()
 
     needs_members = args.show_team or args.count
-    team_members = load_team_members(MEMBERS_FILE) if needs_members else []
+    team_members = []
+    if needs_members:
+        try:
+            team_members = load_team_members(MEMBERS_FILE)
+        except FileNotFoundError:
+            print(f"Could not open members file: {MEMBERS_FILE}.")
+        except OSError:
+            print("Could not read members file due to a system error.")
 
     if args.show_team:
         print("=== DREAM TEAM ===")
@@ -94,33 +102,47 @@ def main() -> None:
                 f"{new_member['forename']} {new_member['surname']} "
                 f"(id={new_member['id']})"
             )
+        except EOFError:
+            print("Input was interrupted. Member was not added.")
+        except KeyboardInterrupt:
+            print("Operation cancelled by user.")
         except ValueError as error:
+            print(f"Could not add member: {error}")
+        except TeamDataError as error:
             print(f"Could not add member: {error}")
 
     if args.search_member:
-        matches = search_team_member(TEAM_DATA_FILE, args.search_member)
-        if not matches:
-            print("No matching members found.")
-        else:
-            print(f"Found {len(matches)} member(s):")
-            for member in matches:
-                print(
-                    f"- [{member.get('id', '?')}] "
-                    f"{member.get('forename', '')} {member.get('surname', '')}"
-                )
+        try:
+            matches = search_team_member(TEAM_DATA_FILE, args.search_member)
+            if not matches:
+                print("No matching members found.")
+            else:
+                print(f"Found {len(matches)} member(s):")
+                for member in matches:
+                    print(
+                        f"- [{member.get('id', '?')}] "
+                        f"{member.get('forename', '')} {member.get('surname', '')}"
+                    )
+        except ValueError as error:
+            print(f"Could not search members: {error}")
+        except TeamDataError as error:
+            print(f"Could not search members: {error}")
 
     if args.display_list:
-        members = get_team_members_list(TEAM_DATA_FILE)
-        if not members:
-            print("No members found.")
-        else:
-            print("=== TEAM MEMBERS (JSON) ===")
-            for member in members:
-                founder_tag = " (founder)" if member.get("team_founder") else ""
-                print(
-                    f"- [{member.get('id', '?')}] "
-                    f"{member.get('forename', '')} {member.get('surname', '')}{founder_tag}"
-                )
+        try:
+            members = get_team_members_list(TEAM_DATA_FILE)
+            if not members:
+                print("No members found.")
+            else:
+                print("=== TEAM MEMBERS (JSON) ===")
+                for member in members:
+                    founder_tag = " (founder)" if member.get("team_founder") else ""
+                    print(
+                        f"- [{member.get('id', '?')}] "
+                        f"{member.get('forename', '')} {member.get('surname', '')}{founder_tag}"
+                    )
+        except TeamDataError as error:
+            print(f"Could not display members: {error}")
 
     if not any(
         [
@@ -136,4 +158,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Operation cancelled by user.")
