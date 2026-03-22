@@ -7,11 +7,19 @@ actions based on the provided options.
 
 import argparse
 
-from team import get_members_count, load_team_members, print_team_members
+from team import (
+    add_team_member,
+    get_team_members_list,
+    get_members_count,
+    load_team_members,
+    print_team_members,
+    search_team_member,
+)
 from utils import greet
 
 
 MEMBERS_FILE = "data/members.txt"
+TEAM_DATA_FILE = "data/team_data.json"
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -26,7 +34,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--show-team",
         action="store_true",
-        help="Display all team members.",
+        help="Display all team members. (Reads from members.txt file)",
     )
     parser.add_argument(
         "--count",
@@ -38,7 +46,21 @@ def parse_arguments() -> argparse.Namespace:
         metavar="NAME",
         help="Print a greeting for the given name.",
     )
-
+    parser.add_argument(
+        "--add-member",
+        action="store_true",
+        help="Add a new member to the team JSON.",
+    )
+    parser.add_argument(
+        "--search-member",
+        metavar="QUERY",
+        help="Search member in team JSON by forename or surname.",
+    )
+    parser.add_argument(
+        "--display-list",
+        action="store_true",
+        help="Display the member list from team JSON.",
+    )
     return parser.parse_args()
 
 
@@ -62,7 +84,54 @@ def main() -> None:
     if args.greet:
         greet(args.greet)
 
-    if not any([args.show_team, args.count, args.greet]):
+    if args.add_member:
+        try:
+            forename = input("Forename: ").strip()
+            surname = input("Surname: ").strip()
+            new_member = add_team_member(TEAM_DATA_FILE, forename, surname)
+            print(
+                "Added member: "
+                f"{new_member['forename']} {new_member['surname']} "
+                f"(id={new_member['id']})"
+            )
+        except ValueError as error:
+            print(f"Could not add member: {error}")
+
+    if args.search_member:
+        matches = search_team_member(TEAM_DATA_FILE, args.search_member)
+        if not matches:
+            print("No matching members found.")
+        else:
+            print(f"Found {len(matches)} member(s):")
+            for member in matches:
+                print(
+                    f"- [{member.get('id', '?')}] "
+                    f"{member.get('forename', '')} {member.get('surname', '')}"
+                )
+
+    if args.display_list:
+        members = get_team_members_list(TEAM_DATA_FILE)
+        if not members:
+            print("No members found.")
+        else:
+            print("=== TEAM MEMBERS (JSON) ===")
+            for member in members:
+                founder_tag = " (founder)" if member.get("team_founder") else ""
+                print(
+                    f"- [{member.get('id', '?')}] "
+                    f"{member.get('forename', '')} {member.get('surname', '')}{founder_tag}"
+                )
+
+    if not any(
+        [
+            args.show_team,
+            args.count,
+            args.greet,
+            args.add_member,
+            args.search_member,
+            args.display_list,
+        ]
+    ):
         print("No arguments provided. Use --help to see available options.")
 
 
