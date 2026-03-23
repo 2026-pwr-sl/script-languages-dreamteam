@@ -5,36 +5,11 @@ Team-related operations.
 import json
 from typing import Any, List
 
-from utils import read_members
-
 
 class TeamDataError(Exception):
     """
     Raised when team JSON data cannot be read, validated, or written.
     """
-
-
-def load_team_members(file_path: str) -> List[str]:
-    """
-    Load team members from a file.
-    """
-    return read_members(file_path)
-
-
-def print_team_members(members: List[str]) -> None:
-    """
-    Print all team members.
-    """
-    print("Members:")
-    for member in members:
-        print(f"- {member}")
-
-
-def get_members_count(members: List[str]) -> int:
-    """
-    Return number of team members.
-    """
-    return len(members)
 
 
 def add_team_member(json_file_path: str, forename: str, surname: str) -> dict:
@@ -79,7 +54,10 @@ def get_team_members_list(json_file_path: str) -> List[dict[str, Any]]:
     return _get_members_list(team_data)
 
 
-def search_team_member(json_file_path: str, query: str) -> List[dict[str, Any]]:
+def search_team_member(
+    json_file_path: str,
+    query: str,
+) -> List[dict[str, Any]]:
     """
     Search for team members in the JSON file.
 
