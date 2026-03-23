@@ -82,6 +82,10 @@ def main() -> None:
                 f"{new_member['forename']} {new_member['surname']} "
                 f"(id={new_member['id']})"
             )
+        except EOFError:
+            print("Input was interrupted. Member was not added.")
+        except KeyboardInterrupt:
+            print("Operation cancelled by user.")
         except ValueError as error:
             print(f"Could not add member: {error}")
         except TeamDataError as error:
