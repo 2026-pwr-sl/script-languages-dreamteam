@@ -8,17 +8,14 @@ actions based on the provided options.
 import argparse
 
 from team import (
+    TeamDataError,
     add_team_member,
     get_team_members_list,
-    get_members_count,
-    load_team_members,
-    print_team_members,
     search_team_member,
 )
 from utils import greet
 
 
-MEMBERS_FILE = "data/members.txt"
 TEAM_DATA_FILE = "data/team_data.json"
 
 
@@ -30,11 +27,6 @@ def parse_arguments() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(
         description="Dream Team command-line application."
-    )
-    parser.add_argument(
-        "--show-team",
-        action="store_true",
-        help="Display all team members. (Reads from members.txt file)",
     )
     parser.add_argument(
         "--count",
@@ -70,16 +62,12 @@ def main() -> None:
     """
     args = parse_arguments()
 
-    needs_members = args.show_team or args.count
-    team_members = load_team_members(MEMBERS_FILE) if needs_members else []
-
-    if args.show_team:
-        print("=== DREAM TEAM ===")
-        print_team_members(team_members)
-
     if args.count:
-        members_count = get_members_count(team_members)
-        print(f"Total members: {members_count}")
+        try:
+            members = get_team_members_list(TEAM_DATA_FILE)
+            print(f"Total members: {len(members)}")
+        except TeamDataError as error:
+            print(f"Could not count members: {error}")
 
     if args.greet:
         greet(args.greet)
@@ -96,35 +84,48 @@ def main() -> None:
             )
         except ValueError as error:
             print(f"Could not add member: {error}")
+        except TeamDataError as error:
+            print(f"Could not add member: {error}")
 
     if args.search_member:
-        matches = search_team_member(TEAM_DATA_FILE, args.search_member)
-        if not matches:
-            print("No matching members found.")
-        else:
-            print(f"Found {len(matches)} member(s):")
-            for member in matches:
-                print(
-                    f"- [{member.get('id', '?')}] "
-                    f"{member.get('forename', '')} {member.get('surname', '')}"
-                )
+        try:
+            matches = search_team_member(TEAM_DATA_FILE, args.search_member)
+            if not matches:
+                print("No matching members found.")
+            else:
+                print(f"Found {len(matches)} member(s):")
+                for member in matches:
+                    print(
+                        f"- [{member.get('id', '?')}] "
+                        f"{member.get('forename', '')} "
+                        f"{member.get('surname', '')}"
+                    )
+        except ValueError as error:
+            print(f"Could not search members: {error}")
+        except TeamDataError as error:
+            print(f"Could not search members: {error}")
 
     if args.display_list:
-        members = get_team_members_list(TEAM_DATA_FILE)
-        if not members:
-            print("No members found.")
-        else:
-            print("=== TEAM MEMBERS (JSON) ===")
-            for member in members:
-                founder_tag = " (founder)" if member.get("team_founder") else ""
-                print(
-                    f"- [{member.get('id', '?')}] "
-                    f"{member.get('forename', '')} {member.get('surname', '')}{founder_tag}"
-                )
+        try:
+            members = get_team_members_list(TEAM_DATA_FILE)
+            if not members:
+                print("No members found.")
+            else:
+                print("=== TEAM MEMBERS (JSON) ===")
+                for member in members:
+                    founder_tag = ""
+                    if member.get("team_founder"):
+                        founder_tag = " (founder)"
+                    print(
+                        f"- [{member.get('id', '?')}] "
+                        f"{member.get('forename', '')} "
+                        f"{member.get('surname', '')}{founder_tag}"
+                    )
+        except TeamDataError as error:
+            print(f"Could not display members: {error}")
 
     if not any(
         [
-            args.show_team,
             args.count,
             args.greet,
             args.add_member,
@@ -136,4 +137,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Operation cancelled by user.")

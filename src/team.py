@@ -5,30 +5,11 @@ Team-related operations.
 import json
 from typing import Any, List
 
-from utils import read_members
 
-
-def load_team_members(file_path: str) -> List[str]:
+class TeamDataError(Exception):
     """
-    Load team members from a file.
+    Raised when team JSON data cannot be read, validated, or written.
     """
-    return read_members(file_path)
-
-
-def print_team_members(members: List[str]) -> None:
-    """
-    Print all team members.
-    """
-    print("Members:")
-    for member in members:
-        print(f"- {member}")
-
-
-def get_members_count(members: List[str]) -> int:
-    """
-    Return number of team members.
-    """
-    return len(members)
 
 
 def add_team_member(json_file_path: str, forename: str, surname: str) -> dict:
@@ -73,7 +54,10 @@ def get_team_members_list(json_file_path: str) -> List[dict[str, Any]]:
     return _get_members_list(team_data)
 
 
-def search_team_member(json_file_path: str, query: str) -> List[dict[str, Any]]:
+def search_team_member(
+    json_file_path: str,
+    query: str,
+) -> List[dict[str, Any]]:
     """
     Search for team members in the JSON file.
 
@@ -83,7 +67,7 @@ def search_team_member(json_file_path: str, query: str) -> List[dict[str, Any]]:
     """
     normalized_query = query.strip().lower()
     if not normalized_query:
-        return []
+        raise ValueError("Search query cannot be empty.")
 
     members = get_team_members_list(json_file_path)
     matching_members: List[dict[str, Any]] = []
@@ -107,17 +91,36 @@ def _read_team_data(json_file_path: str) -> dict[str, Any]:
     """
     Read and return the full team JSON payload.
     """
-    with open(json_file_path, "r", encoding="utf-8") as file:
-        return json.load(file)
+    try:
+        with open(json_file_path, "r", encoding="utf-8") as file:
+            team_data = json.load(file)
+    except FileNotFoundError as error:
+        raise TeamDataError(
+            f"Team data file not found: {json_file_path}."
+        ) from error
+    except json.JSONDecodeError as error:
+        raise TeamDataError(
+            "Team data file is not a valid JSON document."
+        ) from error
+    except OSError as error:
+        raise TeamDataError("Could not read team data file.") from error
+
+    if not isinstance(team_data, dict):
+        raise TeamDataError("Team data format is invalid.")
+
+    return team_data
 
 
 def _write_team_data(json_file_path: str, team_data: dict[str, Any]) -> None:
     """
     Persist team JSON payload to disk.
     """
-    with open(json_file_path, "w", encoding="utf-8") as file:
-        json.dump(team_data, file, indent=2, ensure_ascii=False)
-        file.write("\n")
+    try:
+        with open(json_file_path, "w", encoding="utf-8") as file:
+            json.dump(team_data, file, indent=2, ensure_ascii=False)
+            file.write("\n")
+    except OSError as error:
+        raise TeamDataError("Could not save team data file.") from error
 
 
 def _get_members_list(team_data: dict[str, Any]) -> List[dict[str, Any]]:
@@ -125,4 +128,7 @@ def _get_members_list(team_data: dict[str, Any]) -> List[dict[str, Any]]:
     Extract members list from team data with a safe default.
     """
     members = team_data.get("members", [])
-    return members if isinstance(members, list) else []
+    if not isinstance(members, list):
+        raise TeamDataError("Invalid team data: 'members' must be a list.")
+
+    return members

@@ -1,18 +1,35 @@
-import unittest
+import argparse
 import io
-from unittest.mock import patch  
-from main import greet, get_members_count
+import unittest
+from unittest.mock import patch
+
+from main import parse_arguments
+from utils import greet
+
 
 class TestMainFunctions(unittest.TestCase):
-
-    def test_get_members_count(self):
-        self.assertEqual(get_members_count(), 4)
-
-    @patch('sys.stdout', new_callable=io.StringIO)
-    def test_greet(self, mock_stdout):
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_greet(self, mock_stdout: io.StringIO) -> None:
         greet("Piotr")
         actual_output = mock_stdout.getvalue().strip()
         self.assertEqual(actual_output, "Hello, Piotr!")
 
-if __name__ == '__main__':
+    @patch("argparse.ArgumentParser.parse_args")
+    def test_parse_arguments_count_flag(
+        self,
+        mock_parse_args,
+    ) -> None:
+        mock_parse_args.return_value = argparse.Namespace(
+            count=True,
+            greet=None,
+            add_member=False,
+            search_member=None,
+            display_list=False,
+        )
+
+        args = parse_arguments()
+        self.assertTrue(args.count)
+
+
+if __name__ == "__main__":
     unittest.main()
