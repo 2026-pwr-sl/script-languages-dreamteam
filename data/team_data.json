@@ -1,46 +1,34 @@
 {
-  "name": "DREAMTEAM",
-  "course": "Script Languages",
-  "members": [
-    {
-      "id": 1,
-      "forename": "Piotr",
-      "surname": "Rak",
-      "team_founder": true
-    },
-    {
-      "id": 2,
-      "forename": "Germán",
-      "surname": "Moll",
-      "team_founder": true
-    },
-    {
-      "id": 3,
-      "forename": "Jakub",
-      "surname": "Kuflik",
-      "team_founder": true
-    },
-    {
-      "id": 4,
-      "forename": "Emre",
-      "surname": "Özbayrak",
-      "team_founder": true
-    },
-    {
-      "id": 5,
-      "forename": "John",
-      "surname": "Doe",
-      "team_founder": false
-    },
-    {
-      "id": 6,
-      "forename": "Jakub",
-      "surname": "Kowalski",
-      "team_founder": false
-    }
-  ],
-  "repository": {
-    "name": "script-languages-dreamteam",
-    "url": "https://github.com/2026-pwr-sl/script-languages-dreamteam"
-  }
+	"name": "DREAMTEAM",
+	"course": "Script Languages",
+	"members": [
+		{
+			"id": 1,
+			"forename": "Piotr",
+			"surname": "Rak",
+			"team_founder": true
+		},
+		{
+			"id": 2,
+			"forename": "Germán",
+			"surname": "Moll",
+			"team_founder": true
+		},
+		{
+			"id": 3,
+			"forename": "Jakub",
+			"surname": "Kuflik",
+			"team_founder": true
+		},
+		{
+			"id": 4,
+			"forename": "Emre",
+			"surname": "Özbayrak",
+			"team_founder": true
+		}
+	],
+	"repository": {
+		"name": "script-languages-dreamteam",
+		"url": "https://github.com/2026-pwr-sl/script-languages-dreamteam"
+	}
 }
