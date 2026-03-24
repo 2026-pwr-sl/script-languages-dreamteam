@@ -86,6 +86,22 @@ def search_team_member(
 
     return matching_members
 
+def export_team_data(export_path: str, json_file_path: str) -> None:
+    """
+    Export team data to a JSON file.
+
+    :param export_path: Path to which export the JSON file.
+    :param json_file_path: Path to the source JSON file.
+    """
+    try:
+        team_data = _read_team_data(json_file_path)
+        with open(export_path, "w+", encoding="utf-8") as file:
+            json.dump(team_data, file, indent=2, ensure_ascii=False)
+            file.write("\n")
+    except FileNotFoundError as error:
+        raise TeamDataError(f"Can't find path: {export_path}.") from error
+    except PermissionError as error:
+        raise TeamDataError(f"Permission denied for path: {export_path}.") from error
 
 def _read_team_data(json_file_path: str) -> dict[str, Any]:
     """
@@ -121,7 +137,6 @@ def _write_team_data(json_file_path: str, team_data: dict[str, Any]) -> None:
             file.write("\n")
     except OSError as error:
         raise TeamDataError("Could not save team data file.") from error
-
 
 def _get_members_list(team_data: dict[str, Any]) -> List[dict[str, Any]]:
     """
