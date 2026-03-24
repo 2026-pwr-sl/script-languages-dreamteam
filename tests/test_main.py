@@ -1,35 +1,67 @@
-import argparse
-import io
-import unittest
-from unittest.mock import patch
+import pytest
 
-from main import parse_arguments
-from utils import greet
-
-
-class TestMainFunctions(unittest.TestCase):
-    @patch("sys.stdout", new_callable=io.StringIO)
-    def test_greet(self, mock_stdout: io.StringIO) -> None:
-        greet("Piotr")
-        actual_output = mock_stdout.getvalue().strip()
-        self.assertEqual(actual_output, "Hello, Piotr!")
-
-    @patch("argparse.ArgumentParser.parse_args")
-    def test_parse_arguments_count_flag(
-        self,
-        mock_parse_args,
-    ) -> None:
-        mock_parse_args.return_value = argparse.Namespace(
-            count=True,
-            greet=None,
-            add_member=False,
-            search_member=None,
-            display_list=False,
-        )
-
-        args = parse_arguments()
-        self.assertTrue(args.count)
+from team import (
+    TeamDataError,
+    add_team_member,
+    search_team_member,
+    get_team_members_list,
+)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_add_team_member_empty_names(tmp_path):
+    """Test that adding a member with blank names raises a ValueError."""
+    test_file = tmp_path / "team_data.json"
+    test_file.write_text('{"members": []}', encoding="utf-8")
+
+    with pytest.raises(
+        ValueError, match="Forename and surname are required."
+    ):
+        add_team_member(str(test_file), "   ", "Doe")
+
+    with pytest.raises(
+        ValueError, match="Forename and surname are required."
+    ):
+        add_team_member(str(test_file), "John", "")
+
+
+def test_search_team_member_empty_query(tmp_path):
+    """Test submitting an empty search query raises a ValueError."""
+    test_file = tmp_path / "team_data.json"
+    test_file.write_text('{"members": []}', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Search query cannot be empty."):
+        search_team_member(str(test_file), "   \n ")
+
+
+def test_read_missing_file():
+    """Test reading a non-existent file raises a TeamDataError."""
+    with pytest.raises(TeamDataError, match="Team data file not found"):
+        get_team_members_list("this_file_does_not_exist.json")
+
+
+def test_read_invalid_json(tmp_path):
+    """Test that reading a corrupted JSON file raises a TeamDataError."""
+    test_file = tmp_path / "corrupted_data.json"
+    test_file.write_text("{bad_json: missing_quotes}", encoding="utf-8")
+
+    with pytest.raises(
+        TeamDataError, match="Team data file is not a valid JSON document."
+    ):
+        get_team_members_list(str(test_file))
+
+
+def test_invalid_members_format(tmp_path):
+    """
+    Test that if the JSON payload is missing the list structure,
+    it raises a TeamDataError.
+    """
+    test_file = tmp_path / "wrong_format.json"
+    test_file.write_text(
+        '{"members": "This should be a list, not a string"}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        TeamDataError, match="Invalid team data: 'members' must be a list."
+    ):
+        get_team_members_list(str(test_file))
