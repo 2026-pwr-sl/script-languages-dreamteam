@@ -12,6 +12,7 @@ from team import (
     add_team_member,
     get_team_members_list,
     search_team_member,
+    export_team_data,
 )
 from utils import greet
 
@@ -52,6 +53,11 @@ def parse_arguments() -> argparse.Namespace:
         "--display-list",
         action="store_true",
         help="Display the member list from team JSON.",
+    )
+    parser.add_argument(
+        "--export-data",
+        metavar="FILE_PATH",
+        help="Export team data to a specified file.",
     )
     return parser.parse_args()
 
@@ -128,6 +134,13 @@ def main() -> None:
         except TeamDataError as error:
             print(f"Could not display members: {error}")
 
+    if args.export_data:
+        try:
+            export_team_data(args.export_data, TEAM_DATA_FILE)
+            print(f"Team data exported to: {args.export_data}")
+        except TeamDataError as error:
+            print(error)
+
     if not any(
         [
             args.count,
@@ -135,6 +148,7 @@ def main() -> None:
             args.add_member,
             args.search_member,
             args.display_list,
+            args.export_data,
         ]
     ):
         print("No arguments provided. Use --help to see available options.")
