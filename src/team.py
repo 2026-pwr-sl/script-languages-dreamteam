@@ -100,6 +100,8 @@ def export_team_data(export_path: str, json_file_path: str) -> None:
             file.write("\n")
     except FileNotFoundError as error:
         raise TeamDataError(f"Can't find path: {export_path}.") from error
+    except OSError as error:
+        raise TeamDataError(f"Could not write to path: {export_path}.") from error
     except PermissionError as error:
         raise TeamDataError(f"Permission denied for path: {export_path}.") from error
 
