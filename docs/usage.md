@@ -13,6 +13,7 @@ python src/main.py [OPTIONS]
 | `--add-member`          | Interactively add a new member to the team |
 | `--search-member QUERY` | Search for a member by forename or surname |
 | `--display-list`        | Display all team members                   |
+| `--debug`, `-d` | Enable debug mode | 
 
 ### Examples
 
@@ -31,4 +32,11 @@ python main.py --search-member "Smith"
 
 # List all members
 python main.py --display-list
+```
+
+```bash
+# Runs program in debug mode
+python main.py --count --debug
+# OR
+python main.py --count -d
 ```
