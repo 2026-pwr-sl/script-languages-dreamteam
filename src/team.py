@@ -2,9 +2,11 @@
 Team-related operations.
 """
 
+import logging
 import json
 from typing import Any, List
 
+logger = logging.getLogger()
 
 class TeamDataError(Exception):
     """
@@ -23,12 +25,15 @@ def add_team_member(json_file_path: str, forename: str, surname: str) -> dict:
     """
     cleaned_forename = forename.strip()
     cleaned_surname = surname.strip()
+    logger.debug(f"Cleaned forename: '{cleaned_forename}', surname: '{cleaned_surname}'")
+    
     if not cleaned_forename or not cleaned_surname:
         raise ValueError("Forename and surname are required.")
 
     team_data = _read_team_data(json_file_path)
     members = _get_members_list(team_data)
     next_id = max((member.get("id", 0) for member in members), default=0) + 1
+    logger.debug(f"Next member ID: {next_id}")
 
     new_member = {
         "id": next_id,
@@ -40,6 +45,7 @@ def add_team_member(json_file_path: str, forename: str, surname: str) -> dict:
     members.append(new_member)
     team_data["members"] = members
     _write_team_data(json_file_path, team_data)
+    logger.debug(f"Team data updated with new member: {new_member}")
     return new_member
 
 
@@ -51,6 +57,7 @@ def get_team_members_list(json_file_path: str) -> List[dict[str, Any]]:
     :return: Members list.
     """
     team_data = _read_team_data(json_file_path)
+    logger.debug(f"Team data read successfully from {json_file_path}")
     return _get_members_list(team_data)
 
 
@@ -66,11 +73,14 @@ def search_team_member(
     :return: Matching members.
     """
     normalized_query = query.strip().lower()
+
     if not normalized_query:
         raise ValueError("Search query cannot be empty.")
 
     members = get_team_members_list(json_file_path)
     matching_members: List[dict[str, Any]] = []
+
+    logger.debug(f"Searching through {len(members)} members for query: '{normalized_query}'")
 
     for member in members:
         forename = str(member.get("forename", "")).strip()
@@ -84,6 +94,8 @@ def search_team_member(
         ):
             matching_members.append(member)
 
+    logger.debug(f"Member search results: {matching_members}")
+    
     return matching_members
 
 
@@ -109,6 +121,8 @@ def export_team_data(export_path: str, json_file_path: str) -> None:
         raise TeamDataError(
             f"Could not write to path: {export_path}."
         ) from error
+    
+    logger.debug(f"Team data exported successfully to {export_path}")
 
 
 def _read_team_data(json_file_path: str) -> dict[str, Any]:
@@ -145,6 +159,8 @@ def _write_team_data(json_file_path: str, team_data: dict[str, Any]) -> None:
             file.write("\n")
     except OSError as error:
         raise TeamDataError("Could not save team data file.") from error
+    
+    logger.debug(f"Team data written successfully to {json_file_path}")
 
 
 def _get_members_list(team_data: dict[str, Any]) -> List[dict[str, Any]]:
@@ -155,4 +171,6 @@ def _get_members_list(team_data: dict[str, Any]) -> List[dict[str, Any]]:
     if not isinstance(members, list):
         raise TeamDataError("Invalid team data: 'members' must be a list.")
 
+    logger.debug(f"Extracted members list with {len(members)} items.")
+    
     return members
