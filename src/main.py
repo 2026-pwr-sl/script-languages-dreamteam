@@ -17,11 +17,6 @@ from team import (
 )
 from utils import greet
 
-"""
-Whether to show debug logging.
-"""
-enable_debug : bool = False
-
 TEAM_DATA_FILE = "data/team_data.json"
 
 logger = logging.getLogger()
@@ -65,6 +60,11 @@ def parse_arguments() -> argparse.Namespace:
         metavar="FILE_PATH",
         help="Export team data to a specified file.",
     )
+    parser.add_argument(
+        "--debug", "-d",
+        action="store_true",
+        help="Enable debug logging.",
+    )
     return parser.parse_args()
 
 
@@ -72,11 +72,12 @@ def main() -> None:
     """
     Run the application based on command-line arguments.
     """
+    args = parse_arguments()
+
     logging.basicConfig(
-        level= logging.DEBUG if enable_debug else logging.INFO,
+        level= logging.DEBUG if args.debug else logging.INFO,
         format="[%(levelname)s] [%(filename)s:%(lineno)d]: %(message)s"
     )
-    args = parse_arguments()
 
     if args.count:
         try:
@@ -157,6 +158,7 @@ def main() -> None:
             args.search_member,
             args.display_list,
             args.export_data,
+            args.debug,
         ]
     ):
         print("No arguments provided. Use --help to see available options.")
