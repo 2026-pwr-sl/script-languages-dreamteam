@@ -87,7 +87,7 @@ python -m pytest tests/
 
 ## ⚠️ Problems Encountered
 
-* Environment Setup: Making sure everyone was working within the same virtual environment and had the correct Python paths configured took some            troubleshooting.
+* Environment Setup: Making sure everyone was working within the same virtual environment and had the correct Python paths configured took some troubleshooting.
 
 ##  🧠 What We Learned
 
@@ -99,8 +99,19 @@ python -m pytest tests/
 
 ## Lab03 Note
 
-For the Lab03 exercise, the functions can be grouped by how often they can be called:
+For the Lab03 exercise 9, the functions can be grouped by how often they can be called:
 
 * `successful_reads`, `failed_reads`, `html_entries`, and `print_html_entries` can be called multiple times because they only process the parsed list of entries.
 * `read_log` should be called once per standard input stream because it consumes the input data.
 * `run` is the entry point and normally runs once when the script is executed directly.
+---
+
+## 🏷️ Logging
+
+For logging we're using Python built-in module - [logging](https://docs.python.org/3/library/logging.html).
+
+To use it, it's enough to import it by using:
+
+```python 
+import logging
+```
