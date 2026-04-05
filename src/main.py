@@ -5,6 +5,7 @@ This module parses command-line arguments and executes the requested
 actions based on the provided options.
 """
 
+import logging
 import argparse
 
 from team import (
@@ -16,9 +17,9 @@ from team import (
 )
 from utils import greet
 
-
 TEAM_DATA_FILE = "data/team_data.json"
 
+logger = logging.getLogger()
 
 def parse_arguments() -> argparse.Namespace:
     """
@@ -59,6 +60,11 @@ def parse_arguments() -> argparse.Namespace:
         metavar="FILE_PATH",
         help="Export team data to a specified file.",
     )
+    parser.add_argument(
+        "--debug", "-d",
+        action="store_true",
+        help="Enable debug logging.",
+    )
     return parser.parse_args()
 
 
@@ -67,6 +73,11 @@ def main() -> None:
     Run the application based on command-line arguments.
     """
     args = parse_arguments()
+
+    logging.basicConfig(
+        level= logging.DEBUG if args.debug else logging.INFO,
+        format="[%(levelname)s] [%(filename)s:%(lineno)d]: %(message)s"
+    )
 
     if args.count:
         try:
@@ -83,25 +94,23 @@ def main() -> None:
             forename = input("Forename: ").strip()
             surname = input("Surname: ").strip()
             new_member = add_team_member(TEAM_DATA_FILE, forename, surname)
-            print(
-                "Added member: "
-                f"{new_member['forename']} {new_member['surname']} "
-                f"(id={new_member['id']})"
-            )
+            logger.info("Added new member: "
+                        f"{new_member['forename']} {new_member['surname']} "
+                        f"(id={new_member['id']})")
         except EOFError:
-            print("Input was interrupted. Member was not added.")
+            logger.warning("Input was interrupted.")
         except KeyboardInterrupt:
-            print("Operation cancelled by user.")
+            logger.info("Member addition cancelled by user.")
         except ValueError as error:
-            print(f"Could not add member: {error}")
+            logger.error(f"Could not add member: {error}")
         except TeamDataError as error:
-            print(f"Could not add member: {error}")
+            logger.error(f"Could not add member: {error}")
 
     if args.search_member:
         try:
             matches = search_team_member(TEAM_DATA_FILE, args.search_member)
             if not matches:
-                print("No matching members found.")
+                logger.info("No matching members found.")
             else:
                 print(f"Found {len(matches)} member(s):")
                 for member in matches:
@@ -111,15 +120,15 @@ def main() -> None:
                         f"{member.get('surname', '')}"
                     )
         except ValueError as error:
-            print(f"Could not search members: {error}")
+            logger.error(f"Could not search members: {error}")
         except TeamDataError as error:
-            print(f"Could not search members: {error}")
+            logger.error(f"Could not search members: {error}")
 
     if args.display_list:
         try:
             members = get_team_members_list(TEAM_DATA_FILE)
             if not members:
-                print("No members found.")
+                logger.info("No members found.")
             else:
                 print("=== TEAM MEMBERS (JSON) ===")
                 for member in members:
@@ -132,14 +141,14 @@ def main() -> None:
                         f"{member.get('surname', '')}{founder_tag}"
                     )
         except TeamDataError as error:
-            print(f"Could not display members: {error}")
+            logger.error(f"Could not display members: {error}")
 
     if args.export_data:
         try:
             export_team_data(args.export_data, TEAM_DATA_FILE)
-            print(f"Team data exported to: {args.export_data}")
+            logger.info(f"Team data exported to: {args.export_data}")
         except TeamDataError as error:
-            print(error)
+            logger.error(error)
 
     if not any(
         [
@@ -149,6 +158,7 @@ def main() -> None:
             args.search_member,
             args.display_list,
             args.export_data,
+            args.debug,
         ]
     ):
         print("No arguments provided. Use --help to see available options.")
@@ -158,4 +168,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("Operation cancelled by user.")
+        logger.info("Operation cancelled by user.")

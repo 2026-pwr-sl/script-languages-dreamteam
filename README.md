@@ -87,7 +87,7 @@ python -m pytest tests/
 
 ## ⚠️ Problems Encountered
 
-* Environment Setup: Making sure everyone was working within the same virtual environment and had the correct Python paths configured took some            troubleshooting.
+* Environment Setup: Making sure everyone was working within the same virtual environment and had the correct Python paths configured took some troubleshooting.
 
 ##  🧠 What We Learned
 
@@ -96,3 +96,15 @@ python -m pytest tests/
 * Code Reviews: Utilizing Pull Requests allowed us to review each other's code and catch bugs before merging.
 
 * Python Testing: We gained hands-on experience structuring a Python project with a dedicated src/ directory for code and a tests/ directory for test cases.
+
+---
+
+## 🏷️ Logging
+
+For logging we're using Python built-in module - [logging](https://docs.python.org/3/library/logging.html).
+
+To use it, it's enough to import it by using:
+
+```python 
+import logging
+```
