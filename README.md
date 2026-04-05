@@ -97,6 +97,13 @@ python -m pytest tests/
 
 * Python Testing: We gained hands-on experience structuring a Python project with a dedicated src/ directory for code and a tests/ directory for test cases.
 
+## Lab03 Note
+
+For the Lab03 exercise 9, the functions can be grouped by how often they can be called:
+
+* `successful_reads`, `failed_reads`, `html_entries`, and `print_html_entries` can be called multiple times because they only process the parsed list of entries.
+* `read_log` should be called once per standard input stream because it consumes the input data.
+* `run` is the entry point and normally runs once when the script is executed directly.
 ---
 
 ## 🏷️ Logging
