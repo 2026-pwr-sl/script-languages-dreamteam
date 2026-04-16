@@ -115,3 +115,11 @@ To use it, it's enough to import it by using:
 ```python 
 import logging
 ```
+
+## ipaddress documentation
+
+https://docs.python.org/3/library/ipaddress.html
+
+## datetime documentation
+
+https://docs.python.org/3/library/datetime.html
