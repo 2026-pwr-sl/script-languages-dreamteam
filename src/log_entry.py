@@ -49,7 +49,10 @@ class LogEntry:
 
     def __str__(self):
         """Return a human-readable string representation of the entry."""
-        return f"[{self.timestamp}] {self.ip} -> {self.request} ({self.status})"
+        return (
+            f"[{self.timestamp}] {self.ip} -> "
+            f"{self.request} ({self.status})"
+        )
 
     def __repr__(self):
         """Return an unambiguous string representation of the instance."""
@@ -62,14 +65,57 @@ class LogEntry:
         )
 
 
+def parse_log_line(log_line):
+    """Create a LogEntry object from a single raw log line."""
+    return LogEntry(log_line)
+
+
+def read_log_file(file_path):
+    """Read a logfile and return a list of LogEntry objects."""
+    entries = []
+    with open(file_path, "r", encoding="utf-8") as log_file:
+        for line in log_file:
+            cleaned_line = line.strip()
+            if not cleaned_line:
+                continue
+            entries.append(parse_log_line(cleaned_line))
+    return entries
+
+
+def display_requests_between(entries, start_time, end_time):
+    """Print requests for entries between two datetime moments."""
+    if end_time < start_time:
+        print("Warning: second datetime is earlier than the first one.")
+        return
+
+    for entry in entries:
+        if start_time <= entry.timestamp <= end_time:
+            print(entry.request)
+
+
 if __name__ == "__main__":
     raw_line = (
         '192.168.1.10 - - [18/Oct/2020:01:30:42 +0200] '
         '"GET /index.html HTTP/1.1" 200 1024\n'
     )
-    entry = LogEntry(raw_line)
+    print("Task 6 - parse_log_line:")
+    parsed_entry = parse_log_line(raw_line)
+    print(parsed_entry)
+    print(repr(parsed_entry))
 
-    print("Testing __str__:")
-    print(entry)
-    print("\nTesting __repr__:")
-    print(repr(entry))
+    print("\nTask 7 - read_log_file:")
+    log_entries = read_log_file("data/server_log.txt")
+    print(f"Loaded entries: {len(log_entries)}")
+    print(f"First request: {log_entries[0].request}")
+
+    print("\nTask 8 - display_requests_between (valid range):")
+    range_start = datetime(2020, 10, 18, 1, 0, 0)
+    range_end = datetime(2020, 10, 18, 2, 0, 0)
+    display_requests_between(log_entries, range_start, range_end)
+
+    print("\nTask 8 - display_requests_between (reversed range):")
+    display_requests_between(
+        log_entries,
+        datetime(2020, 10, 19),
+        datetime(2020, 10, 18),
+    )
