@@ -2,11 +2,10 @@ import log_entry
 
 def run():
     log = read_log("data/server_log.txt")
-    print(log)
     
-def read_log(filename):
+def read_log(filename) -> dict[str, any]:
     """
-    Reads a log file and returns it as an object with the filename and entries.
+    Reads a log file and returns it as a dictionary with the filename and entries.
     Each entry is a LogEntry object created by the log_entry module.
     """
     object = {}
