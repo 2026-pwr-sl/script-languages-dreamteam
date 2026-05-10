@@ -1,3 +1,4 @@
+import logging
 import ipaddress
 from datetime import datetime
 
@@ -9,22 +10,48 @@ class LogEntry:
         """Initialize a LogEntry object by parsing a raw log line."""
         # 1. Split by double quotes to isolate the HTTP request
         parts = log_line.split('"')
-        self.request = parts[1]
+        # parts[1] should contain request; be defensive
+        self.request = parts[1] if len(parts) > 1 else ""
+
+        # parse method/path/protocol from the quoted request
+        try:
+            req_parts = self.request.split()
+            self.method = req_parts[0] if len(req_parts) >= 1 else None
+            self.path = req_parts[1] if len(req_parts) >= 2 else None
+            self.protocol = req_parts[2] if len(req_parts) >= 3 else None
+        except Exception:
+            self.method = None
+            self.path = None
+            self.protocol = None
 
         # 2. Split the left part by spaces to get the IP and timestamp
         left_parts = parts[0].split()
+        # left_parts[0] is expected to be the IP address
         self.ip = ipaddress.IPv4Address(left_parts[0])
 
         # Strip the leading bracket from the timestamp string
-        raw_timestamp = left_parts[3].lstrip('[')
-        self.timestamp = self._parse_timestamp(raw_timestamp)
+        if len(left_parts) > 3:
+            raw_timestamp = left_parts[3].lstrip('[')
+        else:
+            raw_timestamp = ""
+        self.timestamp = (
+            self._parse_timestamp(raw_timestamp)
+            if raw_timestamp
+            else None
+        )
 
         # 3. Split the right part by spaces to get status and size
-        right_parts = parts[2].split()
-        self.status = int(right_parts[0])
+        right_parts = parts[2].split() if len(parts) > 2 else []
+        try:
+            self.status = int(right_parts[0]) if right_parts else None
+        except Exception:
+            self.status = None
 
-        size_str = right_parts[1]
-        self.size = int(size_str) if size_str != '-' else 0
+        try:
+            size_str = right_parts[1]
+            self.size = int(size_str) if size_str != '-' else 0
+        except Exception:
+            self.size = None
 
     def _parse_timestamp(self, timestamp_str):
         """Parse timestamp string using split() to a datetime object."""
@@ -34,18 +61,22 @@ class LogEntry:
             'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
         }
 
-        time_parts = timestamp_str.split(':')
-        date_string = time_parts[0]
-        hour = int(time_parts[1])
-        minute = int(time_parts[2])
-        second = int(time_parts[3])
+        try:
+            time_parts = timestamp_str.split(':')
+            date_string = time_parts[0]
+            hour = int(time_parts[1])
+            minute = int(time_parts[2])
+            second = int(time_parts[3])
 
-        date_parts = date_string.split('/')
-        day = int(date_parts[0])
-        month = months[date_parts[1]]
-        year = int(date_parts[2])
+            date_parts = date_string.split('/')
+            day = int(date_parts[0])
+            month = months[date_parts[1]]
+            year = int(date_parts[2])
 
-        return datetime(year, month, day, hour, minute, second)
+            return datetime(year, month, day, hour, minute, second)
+        except Exception:
+            logging.warning("Failed to parse timestamp: %s", timestamp_str)
+            return None
 
     def __str__(self):
         """Return a human-readable string representation of the entry."""
@@ -78,7 +109,13 @@ def read_log_file(file_path):
             cleaned_line = line.strip()
             if not cleaned_line:
                 continue
-            entries.append(parse_log_line(cleaned_line))
+            try:
+                entry = parse_log_line(cleaned_line)
+            except Exception:
+                msg = f"Skipping malformed log line: {cleaned_line}"
+                logging.warning(msg)
+                continue
+            entries.append(entry)
     return entries
 
 

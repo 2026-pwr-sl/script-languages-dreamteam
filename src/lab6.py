@@ -1,32 +1,11 @@
 import json
 import logging
-from pathlib import Path
 from ipaddress import ip_address, IPv4Address
 from typing import Any
 
 import log_entry
+from config import DEFAULT_CONFIG, CONFIG_FILE, load_config, save_config
 
-
-CONFIG_FILE = Path("data/config.json")
-ENCODING = "utf-8"
-
-DEFAULT_CONFIG = {
-
-    "log_file": "data/server_log.txt",
-
-    "ip_address": "",
-
-    "logging_level": "INFO",
-
-    "lines_per_page": 10,
-
-    "show_timestamps": True,
-
-    "request_method": "GET",
-
-}
-
-# CONFIG OPERATIONS
 
 def ask_config() -> dict:
     print("Application configuration (press Enter to use default)\n")
@@ -44,8 +23,13 @@ def ask_config() -> dict:
         return user_input
 
     return {
-        "log_file": get_input("Log file path", DEFAULT_CONFIG["log_file"]),
-        "ip_address": get_input("IP address to display (leave empty to show all)", DEFAULT_CONFIG["ip_address"]),
+        "log_file": get_input(
+            "Log file path", DEFAULT_CONFIG["log_file"]
+        ),
+        "ip_address": get_input(
+            "IP address to display (empty shows all)",
+            DEFAULT_CONFIG["ip_address"],
+        ),
         "logging_level": get_input(
             "Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
             DEFAULT_CONFIG["logging_level"]
@@ -60,51 +44,15 @@ def ask_config() -> dict:
             DEFAULT_CONFIG["show_timestamps"],
             lambda x: x.lower() in ("yes", "y")
         ),
+        "request_method": get_input(
+            "Request method filter (GET, POST, PUT, DELETE) - empty for all",
+            DEFAULT_CONFIG.get("request_method", ""),
+        ),
     }
 
 
-def save_config(config: dict, filename: Path = CONFIG_FILE) -> None:
-    with filename.open("w", encoding=ENCODING) as file:
-        json.dump(config, file, indent=4, ensure_ascii=False)
-
-
-def load_config(filename: Path = CONFIG_FILE) -> dict:
-
-    if not filename.exists():
-
-        logging.info("Configuration file does not exist. Using default values.")
-
-        return DEFAULT_CONFIG.copy()
-
-    try:
-
-        with filename.open("r", encoding=ENCODING) as file:
-
-            config = json.load(file)
-
-    except json.JSONDecodeError:
-
-        logging.error("Configuration file is not a correct JSON file.")
-
-        raise SystemExit("Invalid configuration file. Application stopped.")
-
-    final_config = DEFAULT_CONFIG.copy()
-
-    for key, default_value in DEFAULT_CONFIG.items():
-
-        value = config.get(key)
-
-        if key != "ip_address" and (value is None or value == ""):
-
-            logging.info(f"Using default for '{key}'")
-
-            final_config[key] = default_value
-
-        else:
-
-            final_config[key] = value
-
-    return final_config
+# Configuration load/save are provided by src/config.py (DEFAULT_CONFIG,
+# load_config, save_config).
 
 # LOG OPERATIONS
 
@@ -116,32 +64,20 @@ def setup_logging(level: str) -> None:
     )
 
 
-
-
 def read_log(filename: str) -> dict[str, Any]:
-
     if not filename:
-
         logging.error("Filename is empty.")
-
         raise SystemExit("Error: log file name is empty.")
 
     try:
-
         entries = log_entry.read_log_file(filename)
-
     except FileNotFoundError:
-
         logging.error(f"Log file does not exist: {filename}")
-
         raise SystemExit(f"Error: log file '{filename}' not found.")
 
     return {
-
         "filename": filename,
-
         "entries": entries,
-
     }
 
 
@@ -155,22 +91,45 @@ def filter_entries_by_ip(entries: list, ip: IPv4Address | None) -> list:
     ]
 
 
-def display_entries(entries: list, lines_per_page: int, show_timestamps: bool) -> None:
+def filter_entries_by_method(entries: list, method_raw: str | None) -> list:
+    if not method_raw:
+        return entries
+
+    method_upper = method_raw.strip().upper()
+
+    def keep(entry):
+        m = getattr(entry, "method", None)
+        if not m:
+            return False
+        return m.upper() == method_upper
+
+    return [entry for entry in entries if keep(entry)]
+
+
+def display_entries(
+    entries: list, lines_per_page: int, show_timestamps: bool
+) -> None:
     if not entries:
         print("No log entries to display.")
         return
-
     if lines_per_page <= 0:
-        logging.warning("Invalid lines_per_page value. Showing all entries.")
+        logging.warning("Invalid lines_per_page value. Showing all.")
         lines_per_page = len(entries)
 
+    printed = 0
     for index, entry in enumerate(entries, start=1):
-        if show_timestamps:
-            print(f"{index}. [{entry.timestamp}] {entry.ip}")
-        else:
-            print(f"{index}. {entry.ip}")
+        printed += 1
+        ts = getattr(entry, "timestamp", None)
+        timestamp = f"[{ts}] " if show_timestamps and ts else ""
+        method = getattr(entry, "method", None) or "-"
+        path = getattr(entry, "path", None) or "-"
+        status = getattr(entry, "status", None) or "-"
+        size = getattr(entry, "size", None)
+        size_display = size if size is not None else "-"
+        msg = f"{index}. {timestamp}{entry.ip} {method} {path}"
+        print(f"{msg} {status} {size_display}")
 
-        if index % lines_per_page == 0 and index != len(entries):
+        if printed % lines_per_page == 0 and index != len(entries):
             input("\nPress Enter to continue...\n")
 
 
@@ -190,14 +149,51 @@ def run() -> None:
     log = read_log(config["log_file"])
 
     chosen_ip_raw = config["ip_address"].strip()
-    
+
     try:
-        chosen_ip = ip_address(chosen_ip_raw) if chosen_ip_raw else None
+        chosen_ip = (
+            ip_address(chosen_ip_raw) if chosen_ip_raw else None
+        )
     except ValueError:
-        logging.error(f"Invalid IP address in configuration: {chosen_ip_raw}")
-        raise SystemExit(f"Error: invalid IP address '{chosen_ip_raw}'.")
-    
+        logging.error(
+            f"Invalid IP address in configuration: {chosen_ip_raw}"
+        )
+        raise SystemExit(
+            f"Error: invalid IP address '{chosen_ip_raw}'."
+        )
+
+    # apply IP filter first
     filtered_entries = filter_entries_by_ip(log["entries"], chosen_ip)
+
+    # validate and normalise lines_per_page
+    try:
+        lines_per_page = int(
+            config.get(
+                "lines_per_page", DEFAULT_CONFIG["lines_per_page"]
+            )
+        )
+    except Exception:
+        msg = "lines_per_page is not an integer. Using default."
+        logging.warning(msg)
+        lines_per_page = DEFAULT_CONFIG["lines_per_page"]
+
+    if lines_per_page <= 0:
+        default_lpp = DEFAULT_CONFIG["lines_per_page"]
+        logging.warning(
+            "Invalid lines_per_page. Using default value: %s.",
+            default_lpp,
+        )
+        lines_per_page = default_lpp
+
+    # Sanity-check to catch internal bugs. Validate first, then assert.
+    assert lines_per_page > 0, (
+        "lines_per_page must be > 0"
+    )  # Ensures pagination fallback worked; bugs in validation break this.
+
+    # filter by HTTP method (case-insensitive)
+    filtered_entries = filter_entries_by_method(
+        filtered_entries, config.get("request_method")
+    )
 
     print("\nConfiguration:")
     print(json.dumps(config, indent=4, ensure_ascii=False))
@@ -210,7 +206,7 @@ def run() -> None:
 
     display_entries(
         filtered_entries,
-        config["lines_per_page"],
+        lines_per_page,
         config["show_timestamps"],
     )
 

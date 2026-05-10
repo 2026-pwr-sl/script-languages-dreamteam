@@ -1,0 +1,8 @@
+{
+    "log_file": "data/server_log.txt",
+    "ip_address": "",
+    "logging_level": "INFO",
+    "lines_per_page": 10,
+    "show_timestamps": true,
+    "request_method": ""
+}
