@@ -106,6 +106,25 @@ def print_subnet_requests(entries, display_limit):
                 input("Press Enter to continue...")
 
 
+def print_bytes_for_request_type(entries, display_cfg):
+    request_type = display_cfg.get("filter", "").strip().upper()
+    separator = display_cfg.get("separator", ",")
+    request_pattern = re.compile(r'^\s*([A-Z]+)\b', re.IGNORECASE)
+    total_bytes = 0
+
+    for entry in entries:
+        request_header = entry.get('request_header', '')
+        method_match = request_pattern.match(request_header)
+        if not method_match:
+            continue
+
+        method = method_match.group(1).upper()
+        if method == request_type:
+            total_bytes += entry.get('size', 0)
+
+    print(f"{request_type}{separator}{total_bytes}")
+
+
 def print_browser_requests(entries, browser="Chrome"):
     for entry in entries:
         if browser.lower() in entry.get('user_agent', '').lower():
@@ -119,6 +138,9 @@ if __name__ == "__main__":
 
     print("--- Subnet Requests ---")
     print_subnet_requests(log_entries, display_cfg.get("lines", 10))
+
+    print("\n--- Request Type Byte Summary ---")
+    print_bytes_for_request_type(log_entries, display_cfg)
 
     print("\n--- Browser Requests ---")
     print_browser_requests(log_entries, "Chrome")
