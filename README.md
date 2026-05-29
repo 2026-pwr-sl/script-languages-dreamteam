@@ -129,3 +129,8 @@ https://docs.python.org/3/library/ipaddress.html
 ## datetime documentation
 
 https://docs.python.org/3/library/datetime.html
+
+
+## link to data on keggle:
+
+https://www.kaggle.com/datasets/laveshjadon/ai-impact-on-students
