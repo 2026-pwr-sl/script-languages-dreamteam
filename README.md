@@ -137,3 +137,87 @@ https://docs.python.org/3/library/datetime.html
 ## link to data on keggle:
 
 https://www.kaggle.com/datasets/laveshjadon/ai-impact-on-students
+
+---
+
+## Lab 08 / List 10: AI Student Impact Analysis
+
+This repository includes a CSV analysis script in `src/app8.py`.
+
+### Dataset
+
+Dataset URL: https://www.kaggle.com/datasets/laveshjadon/ai-impact-on-students
+
+The dataset describes simulated student records and the relationship between
+AI tool usage and academic factors such as major category, GPA, paid AI
+subscription status, study hours, anxiety level, burnout risk, and skill
+retention.
+
+The local dataset file is expected at `data/ai_student_inpact.csv`, but the
+script also accepts a direct path to another `.csv` file.
+
+### Setup
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Create a local `.env` file from `.env.example` if you want to change the
+analysis settings:
+
+```bash
+cp .env.example .env
+```
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### Run the App
+
+Print the summary results to the terminal:
+
+```bash
+python src/app8.py ai_student_inpact.csv
+```
+
+You can also pass the path explicitly:
+
+```bash
+python src/app8.py data/ai_student_inpact.csv
+```
+
+Show help:
+
+```bash
+python src/app8.py -h
+```
+
+### Generate the Excel Report
+
+Create an `.xlsx` report:
+
+```bash
+python src/app8.py ai_student_inpact.csv -o report.xlsx
+```
+
+The Excel report contains a title, summary section, statistics section, and
+aggregation section. It is generated with Python standard-library `zipfile`
+and Office Open XML files, so no pandas or Excel writer package is required.
+
+### Environment Variables
+
+The script loads `.env` using `python-dotenv`.
+
+- `STAT_COLUMN`: numeric column used for average and median calculations.
+  Default: `Post_Semester_GPA`.
+- `AGGREGATION_COLUMN`: column used for grouped row counts.
+  Default: `Major_Category`.
+- `FILTER_COLUMN`: column used for the summary filter count.
+  Default: `Paid_Subscription`.
+- `FILTER_VALUE`: value counted in `FILTER_COLUMN`.
+  Default: `True`.
