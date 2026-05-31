@@ -133,16 +133,7 @@ https://docs.python.org/3/library/ipaddress.html
 
 https://docs.python.org/3/library/datetime.html
 
----
 
-At the first run of `pycodestyle` the result showed
+## link to data on keggle:
 
-```
-src/lab9.py:146:50: W292 no newline at end of file
-```
-
-After correcting it the result was
-
-```
-
-```
+https://www.kaggle.com/datasets/laveshjadon/ai-impact-on-students
